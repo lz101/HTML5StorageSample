@@ -1,0 +1,162 @@
+﻿body
+{
+	background: #7ABD6B;
+	height:100%;
+}
+
+h1
+{
+	font-family: Segoe,sans-serif,Arial;
+	color: white;
+}
+
+h2
+{
+	font-family: Segoe,sans-serif,Arial;
+	color: white;
+	padding-top:5px;
+}
+
+header
+{
+	height: 129px;
+	background-repeat: no-repeat;
+	background-image: url('images/shopping.png');
+	background-size: contain;
+	margin-left: 120px;
+	margin-top: 50px;
+}
+
+	header hgroup
+	{
+		padding: 55px 0px 0px 110px;
+	}
+
+.wrapper
+{
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto -80px 0px;
+}
+
+.main
+{
+	margin-top: 30px;
+	margin-left: 120px;
+}
+
+.text
+{
+	color: #5b5b5b;
+	font-weight: bold;
+	font-size: 12px;
+	text-align: left;
+	line-height: 15px;
+}
+
+.link
+{
+	color: #2a801f;
+	text-decoration: underline;
+	padding-left: 3px;
+}
+
+#status
+{
+	position: absolute;
+	right: 50px;
+	top: 35px;
+	padding: 10px;
+	color: #fff;
+	border-radius: 5px 5px 5px 5px;
+}
+
+.online
+{
+	background-color: Green;
+}
+
+.offline
+{
+	background-color: Red;
+}
+
+#shopList
+{
+	float: left;
+	height: 54px;
+}
+
+#log
+{
+	margin-left: 400px;
+}
+
+	#log div
+	{
+		border-left: solid;
+		border-width: 1px;
+		border-color: white;
+		padding-left: 10px;
+		font-family: Segoe,sans-serif,Arial;
+		color: white;
+	}
+
+#ulGroceryList
+{
+	background: #F9FFB4;
+	padding: 0px 10px;
+}
+
+	#ulGroceryList li
+	{
+		border-bottom: solid;
+		border-width: 1px;
+		padding-top: 20px;
+	}
+
+		#ulGroceryList li div
+		{
+			font-size: 20px;
+			vertical-align: bottom;
+		}
+
+
+li
+{
+	width: 300px;
+	height: 40px;
+	display: block;
+}
+
+	li div:first-child
+	{
+		float: left;
+	}
+
+.delete
+{
+	background-image: url('images/remove.png');
+	width: 43px;
+	height: 43px;
+	float: right;
+	margin-top: -5px;
+}
+
+#btnAddProduct
+{
+	background-image: url('images/add.png');
+	width: 46px;
+	height: 51px;
+	background-color: transparent;
+	border: none;
+	vertical-align: middle;
+}
+
+#txtProduct
+{
+	width: 265px;
+	font-size: 20px;
+	margin-top: -5px;
+}

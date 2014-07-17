@@ -1,0 +1,343 @@
+1. /////////////// DataStructures.js implemented /////////////////
+
+    // Object to store in the list
+    ns.GroceryItem = function (productToBuy, productIndex) {
+        this.ID = 0;
+        this.Key = productIndex;
+        this.ProductToBuy = productToBuy;
+        this.status = ns.itemStatus.Insert;        
+    }
+
+    // consts to hold the status of an item
+    ns.itemStatus = {
+        None: 0,
+        Insert: 1,
+        Delete: 2
+    };
+
+2. /////////////// groceryStore.js with in memory storage /////////////
+
+    var productIndex = 0,
+        inMemoryStorage = [];
+
+    function contentLoaded() {        
+
+        $('#btnAddProduct').click(function () {
+            var product = $('#txtProduct').val();
+            var newItem = new ns.GroceryItem(product, productIndex);
+            productIndex += 1;
+
+            addListItem(newItem);
+        });
+
+        showGroceryList();
+    }
+
+    function showGroceryList() {
+       
+        var ul = $('#ulGroceryList').empty();
+        $(inMemoryStorage).each(function () {
+            addListItem(this);            
+        });        
+    }
+
+    function addListItem(item) {
+        var itemKey = item.Key;
+        var textDiv = $("<div/>").text(item.ProductToBuy);
+        var deleteBtn = $("<div/>").addClass("delete").click(function () {
+            deleteItemFromList(itemKey);
+        });
+        $("<li/>").attr("data-key", itemKey).append(textDiv).append(deleteBtn).appendTo($('#ulGroceryList'));
+    }
+
+    function deleteItemFromList(itemKey) {
+        var item = inMemoryStorage[itemKey];
+
+        $('li[data-key=' + itemKey + ']').remove();
+    }
+
+    window.addEventListener("DOMContentLoaded", contentLoaded, false);
+
+3. ////////////// WebStorage.js implemented ///////////////////////////////
+   
+    ns.Storage = function () {
+    }
+
+    ns.Storage.prototype.saveItem = function (item) {
+        localStorage.setItem(item.Key, JSON.stringify(item));
+    }
+
+    ns.Storage.prototype.removeItem = function (key) {
+        localStorage.removeItem(key);       
+    }
+
+    ns.Storage.prototype.getAllItems = function () {        
+        var items = [],
+            len = localStorage.length,
+            i = 0,
+            key,
+            item;
+
+        for (; i < len; i += 1) {
+            key = localStorage.key(i);
+            item = JSON.parse(localStorage.getItem(key));
+            items.push(item);
+        }
+        return items;
+        
+    }
+
+    ns.Storage.prototype.getByKey = function (key) {
+        return JSON.parse(localStorage.getItem(key)); 
+    }
+
+4. //////////////// DataService.js implemented ///////////////////////
+
+    ns.DataService = function () {
+        var logger = new ns.Logger('#log');
+        var storage = new ns.Storage();
+
+        function saveItemLocal(item) {
+            storage.saveItem(item);
+            logger.log(item.ProductToBuy + ' was saved locally');
+        }
+
+        function saveItemRemote(item) {
+            $.post("/home/save", item, function (data) {
+                data.status = ns.itemStatus.None;
+                storage.saveItem(data);
+                logger.log(data.ProductToBuy + ' was saved to the server');
+            });
+        }
+
+        function deleteItemLocal(key, id) {
+            storage.removeItem(key);
+            logger.log('item ' + id + ' was deleted locally');
+        }
+
+        function deleteItemRemote(id) {
+            $.post("/home/delete", { id: id }, function (data) {
+                logger.log(data);
+            });
+        }
+
+        function getAllItems() {
+            return storage.getAllItems();
+        }
+
+        function getByKey(key) {
+            return storage.getByKey(key);
+        }
+
+        return {
+            saveItemLocal: saveItemLocal,
+            saveItemRemote: saveItemRemote,
+            deleteItemLocal: deleteItemLocal,
+            deleteItemRemote: deleteItemRemote,
+            getAllItems: getAllItems,
+            getByKey: getByKey
+        }
+    }
+
+5. ////////////// groceryStore.js with DataService //////////////////////
+
+var productIndex = 0,
+        dataService;
+
+    function contentLoaded() {
+        dataService = new ns.DataService();
+
+        $('#btnAddProduct').click(function () {
+            var product = $('#txtProduct').val();
+            var newItem = new ns.GroceryItem(product, productIndex);
+            productIndex += 1;
+
+            addListItem(newItem);
+            dataService.saveItemLocal(newItem);
+            dataService.saveItemRemote(newItem);
+        });
+
+        showGroceryList();
+    }
+
+    function deleteItems(itemsToDelete) {
+        $(itemsToDelete).each(function () {
+            dataService.deleteItemLocal(this.Key, this.ID);
+            dataService.deleteItemRemote(this.ID);
+        });
+    }
+
+    function showGroceryList() {
+        var list = dataService.getAllItems();
+
+        var ul = $('#ulGroceryList').empty();
+        $(list).each(function () {
+            addListItem(this);
+            if (productIndex < this.Key) {
+                productIndex = this.Key;
+            }
+        });
+        productIndex += 1;
+    }
+
+    function addListItem(item) {
+        var itemKey = item.Key;
+        var textDiv = $("<div/>").text(item.ProductToBuy);
+        var deleteBtn = $("<div/>").addClass("delete").click(function () {
+            deleteItemFromList(itemKey);
+        });
+        $("<li/>").attr("data-key", itemKey).append(textDiv).append(deleteBtn).appendTo($('#ulGroceryList'));
+    }
+
+    function deleteItemFromList(itemKey) {
+        var item = dataService.getByKey(itemKey);
+        var id = item.ID;
+        dataService.deleteItemLocal(itemKey, id);
+        dataService.deleteItemRemote(id);
+
+        $('li[data-key=' + itemKey + ']').remove();
+    }
+
+    window.addEventListener("DOMContentLoaded", contentLoaded, false);
+
+
+6. ///////// AppCache.js ////////////////
+
+    ns.AppCacheUtils = function (statusDivId, onlineCallback) {
+        var self = this, 
+            statusElmId = statusDivId || "#status";
+        this.div = $(statusDivId);
+        setAppCacheEvents(self, onlineCallback);
+    }
+
+    ns.AppCacheUtils.prototype.isOnLine = function () {
+        return navigator.onLine;
+    }
+
+    ns.AppCacheUtils.prototype.toggleOnlineDiv = function () {
+        var self = this;
+        if (self.isOnLine()) {
+            self.div.text("Online").removeClass("offline").addClass("online");
+        }
+        else {
+            self.div.text("Offline").removeClass("online").addClass("offline");
+        }
+    }
+
+    function setAppCacheEvents(self, onlineCallback) {
+        if (window.applicationCache) {
+            window.applicationCache.onupdateready = function (e) {
+                applicationCache.swapCache();
+                window.location.reload();
+            }
+
+            window.addEventListener("online", function (e) {
+                self.toggleOnlineDiv();
+                onlineCallback();
+            }, false);
+
+            window.addEventListener("offline", function (e) {
+                self.toggleOnlineDiv();
+            }, false);
+        }
+    }
+
+
+7. ///////////// groceryStore.js with AppCache ///////////////
+
+    var productIndex = 0,
+        dataService,
+        appCache;
+
+    function contentLoaded() {
+        appCache = new ns.AppCacheUtils('#status', saveRemote);
+        dataService = new ns.DataService();        
+
+        $('#btnAddProduct').click(function () {
+            var product = $('#txtProduct').val();
+            var newItem = new ns.GroceryItem(product, productIndex);
+            productIndex += 1;
+
+            addListItem(newItem);
+            dataService.saveItemLocal(newItem);
+            if (appCache.isOnLine()) {
+                dataService.saveItemRemote(newItem);
+            }
+        });
+
+        showGroceryList();
+        appCache.toggleOnlineDiv();
+        if (appCache.isOnLine()) {
+            saveRemote();
+        }
+    }
+
+    function saveRemote() {
+        var items = dataService.getAllItems(),
+            len = items.length,
+            itemsToDelete = [],
+            i = 0;
+
+        $(items).each(function () {
+            var storedItem = this;
+            switch (storedItem.status) {
+                case ns.itemStatus.Insert:
+                    dataService.saveItemRemote(storedItem);
+                    break;
+                case ns.itemStatus.Delete:
+                    itemsToDelete.push(storedItem);
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        deleteItems(itemsToDelete);
+    }
+
+    function deleteItems(itemsToDelete) {
+        $(itemsToDelete).each(function () {
+            dataService.deleteItemLocal(this.Key, this.ID);
+            dataService.deleteItemRemote(this.ID);
+        });
+    }
+
+    function showGroceryList() {
+        var list = dataService.getAllItems();
+
+        var ul = $('#ulGroceryList').empty();
+        $(list).each(function () {
+            addListItem(this);
+            if (productIndex < this.Key) {
+                productIndex = this.Key;
+            }
+        });
+        productIndex += 1;
+    }
+
+    function addListItem(item) {
+        var itemKey = item.Key;
+        var textDiv = $("<div/>").text(item.ProductToBuy);
+        var deleteBtn = $("<div/>").addClass("delete").click(function () {
+            deleteItemFromList(itemKey);
+        });
+        $("<li/>").attr("data-key", itemKey).append(textDiv).append(deleteBtn).appendTo($('#ulGroceryList'));
+    }
+
+    function deleteItemFromList(itemKey) {
+        var item = dataService.getByKey(itemKey);
+        if (appCache.isOnLine()) {
+            var id = item.ID;
+            dataService.deleteItemLocal(itemKey, id);
+            dataService.deleteItemRemote(id);
+        }
+        else {
+            // only set the status to deleted and wait for next time we are connected
+            item.status = ns.itemStatus.Delete;
+            dataService.saveItemLocal(item);
+        }
+        $('li[data-key=' + itemKey + ']').remove();
+    }
+
+    window.addEventListener("DOMContentLoaded", contentLoaded, false);
+

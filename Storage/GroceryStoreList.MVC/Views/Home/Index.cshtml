@@ -1,0 +1,33 @@
+﻿@{
+    ViewBag.Title = "Grocery Store List";
+}
+@section scripts {
+    <script src="@Url.Content("~/Scripts/app/groceryStore.DataStructures.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/app/groceryStore.Logger.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/app/groceryStore.WebStorage.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/app/groceryStore.DataService.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/app/groceryStore.AppCache.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/groceryStore.js")" type="text/javascript"></script>
+}
+<div id="status">
+</div>
+<div id="shopList">
+    <input type="text" id="txtProduct" name="txtProduct" list="dlProducts" />
+    <input type="button" id="btnAddProduct" />
+    <ul id="ulGroceryList">
+    </ul>
+</div>
+
+<div id="log">
+    <h2>Backlog</h2>
+</div>
+<datalist id="dlProducts">
+    <option value="Corn" />
+    <option value="Ice Cream" />
+    <option value="Cucumbers" />
+    <option value="Tomatoes" />
+    <option value="Lettuce" />
+    <option value="Milk" />
+    <option value="Chicken" />
+    <option value="Bread" />
+</datalist>
